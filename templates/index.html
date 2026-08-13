@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherPulse — Live Weather Dashboard</title>
+    <meta name="description" content="Real-time weather forecasts, air quality metrics, and 5-day outlooks for any city worldwide.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=12">
+</head>
+
+<body>
+    <!-- Top Navigation Header (Outside Card) -->
+    <header class="site-header">
+        <div class="header-brand">
+            <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            </svg>
+            <span class="brand-name">WeatherPulse</span>
+        </div>
+        <nav class="nav-links">
+            <a href="/" class="nav-link active">Home</a>
+            <a href="/about" class="nav-link">About</a>
+        </nav>
+    </header>
+
+    <main class="app-wrapper">
+        <div class="card">
+            {% if weather %}
+            <!-- 2-Column Horizontal Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Left Column: Search, City Header, Hero Weather, AQI Detail -->
+                <div class="left-col">
+                    <!-- Search Form Bar -->
+                    <form method="POST" class="search-form" id="search-form">
+                        <div class="input-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" name="city" id="city-input" placeholder="Search for a city..." required autocomplete="off">
+                        </div>
+                        <button type="submit" class="submit-btn" id="submit-btn" title="Search">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <!-- Recent Searches -->
+                    <div class="recent-searches" id="recent-searches-container" style="display:none;">
+                        <span class="recent-label">Recent:</span>
+                        <div class="recent-pills" id="recent-pills"></div>
+                    </div>
+
+                    <!-- City Header -->
+                    <div class="city-header">
+                        <h1 class="city-name">{{ weather.name }}{% if country %}, {{ country }}{% endif %}</h1>
+                        <p class="city-datetime" id="city-datetime"></p>
+                    </div>
+
+                    <!-- Hero Weather Section -->
+                    <div class="hero-section">
+                        <div class="hero-left">
+                            <img class="hero-icon" src="https://openweathermap.org/img/wn/{{ weather.weather[0].icon }}@4x.png" alt="{{ weather.weather[0].description }}">
+                            <div class="hero-temp-group">
+                                <span class="hero-temp" id="main-temp-val" data-celsius="{{ weather.main.temp }}">{{ weather.main.temp | round | int }}</span>
+                                <div class="hero-temp-meta">
+                                    <button type="button" class="unit-toggle" id="unit-toggle-btn" title="Toggle °C / °F">
+                                        <span class="unit-opt active" id="unit-c">°C</span>
+                                        <span class="unit-sep">/</span>
+                                        <span class="unit-opt" id="unit-f">°F</span>
+                                    </button>
+                                    <span class="hero-desc">{{ weather.weather[0].description | capitalize }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AQI Detail Section (With Multi-Color Gradient Slider) -->
+                    <div class="aqi-detail" id="tab-content-aqi">
+                        <div class="aqi-detail-header">
+                            <div class="aqi-big-number {% if aqi_numeric and aqi_numeric > 150 %}aqi-danger{% elif aqi_numeric and aqi_numeric > 100 %}aqi-warn{% endif %}">{{ aqi_numeric if aqi_numeric is not none else '--' }}</div>
+                            <div class="aqi-meta">
+                                <span class="aqi-status-label">{{ aqi_label or 'N/A' }}</span>
+                                <p class="aqi-description">{{ aqi_description or 'Air quality data is not available for this location.' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Multi-Color Gradient AQI Slider -->
+                        <div class="aqi-slider-container">
+                            <div class="aqi-slider-bar">
+                                {% if aqi_numeric is not none %}
+                                <div class="aqi-slider-thumb" style="left: {{ [[(aqi_numeric / 500) * 100, 0] | max, 100] | min }}%;"></div>
+                                {% endif %}
+                            </div>
+                            <div class="aqi-slider-labels">
+                                <span>0</span>
+                                <span>50</span>
+                                <span>100</span>
+                                <span>150</span>
+                                <span>200</span>
+                                <span>300</span>
+                                <span>500</span>
+                            </div>
+                        </div>
+
+                        {% if pm2_5 is not none %}
+                        <div class="pm25-badge">
+                            <span class="pm25-label">PM2.5</span>
+                            <span class="pm25-value">{{ pm2_5 }} μg/m³</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Right Column: 2x2 Extra Metrics Grid & Vertical 5-Day Forecast List -->
+                <div class="right-col">
+                    <!-- Extra Metrics 2x2 Grid -->
+                    <div class="metrics-2x2">
+                        <div class="metric-card">
+                            <span class="metric-icon">💧</span>
+                            <span class="metric-label">Humidity</span>
+                            <span class="metric-value">{{ humidity }}%</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-icon">💨</span>
+                            <span class="metric-label">Wind Speed</span>
+                            <span class="metric-value">{{ wind_speed }} m/s</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-icon">🌧️</span>
+                            <span class="metric-label">Precipitation</span>
+                            <span class="metric-value">{{ clouds }}%</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-icon">🔺</span>
+                            <span class="metric-label">High / Low</span>
+                            <span class="metric-value">
+                                <span class="temp-convertible" data-celsius="{{ temp_max }}">{{ temp_max | round | int }}</span>° / 
+                                <span class="temp-convertible" data-celsius="{{ temp_min }}">{{ temp_min | round | int }}</span>°
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 5-Day Forecast Stacked Vertical List -->
+                    {% if forecast %}
+                    <div class="forecast-section">
+                        <h3 class="section-title">5-Day Forecast</h3>
+                        <div class="forecast-list">
+                            {% for day in forecast %}
+                            <div class="forecast-card">
+                                <div class="forecast-day-group">
+                                    <span class="forecast-day">{{ day.day }}</span>
+                                    <span class="forecast-date">{{ day.date_short }}</span>
+                                </div>
+                                <div class="forecast-icon-group">
+                                    <img class="forecast-icon" src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png" alt="{{ day.description }}" title="{{ day.description | capitalize }}">
+                                    <span class="forecast-desc">{{ day.description | capitalize }}</span>
+                                </div>
+                                <div class="forecast-temps">
+                                    <span class="forecast-high temp-convertible" data-celsius="{{ day.temp_max }}">{{ day.temp_max }}</span>°
+                                    <span class="forecast-slash">/</span>
+                                    <span class="forecast-low temp-convertible" data-celsius="{{ day.temp_min }}">{{ day.temp_min }}</span>°
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% elif error %}
+            <!-- Error State -->
+            <div class="error-container">
+                <form method="POST" class="search-form" id="search-form">
+                    <div class="input-wrapper">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" name="city" id="city-input" placeholder="Search for a city..." required autocomplete="off">
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </form>
+                <div class="error-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <p class="error-text">{{ error }}</p>
+                </div>
+            </div>
+            {% else %}
+            <!-- Welcome Empty State -->
+            <div class="welcome-container">
+                <form method="POST" class="search-form" id="search-form">
+                    <div class="input-wrapper">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" name="city" id="city-input" placeholder="Search for a city..." required autocomplete="off">
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </form>
+                <div class="recent-searches" id="recent-searches-container" style="display:none;">
+                    <span class="recent-label">Recent:</span>
+                    <div class="recent-pills" id="recent-pills"></div>
+                </div>
+
+                <div class="welcome-state">
+                    <div class="welcome-illustration">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v2"></path>
+                            <path d="M12 20v2"></path>
+                            <path d="m4.93 4.93 1.41 1.41"></path>
+                            <path d="m17.66 17.66 1.41 1.41"></path>
+                            <path d="M2 12h2"></path>
+                            <path d="M20 12h2"></path>
+                            <path d="m6.34 17.66-1.41 1.41"></path>
+                            <path d="m19.07 4.93-1.41 1.41"></path>
+                        </svg>
+                    </div>
+                    <h2 class="welcome-title">Welcome to WeatherPulse</h2>
+                    <p class="welcome-text">Search for any city to see real-time weather, air quality metrics, and a 5-day forecast.</p>
+                    <div class="welcome-chips">
+                        <span class="chip">🌡️ Real-Time Temp</span>
+                        <span class="chip">💨 Wind & Humidity</span>
+                        <span class="chip">🍃 AQI & PM2.5</span>
+                        <span class="chip">📅 5-Day Forecast</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Footer (Dark Slate Text) -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <span class="copyright">Developed by 🌍 | Copyright © 2026 WeatherPulse</span>
+            <div class="footer-links">
+                <a href="/privacy">Privacy Policy</a>
+                <span class="dot">·</span>
+                <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+                <span class="dot">·</span>
+                <span>Powered by <a href="https://openweathermap.org/" target="_blank" rel="noopener">OpenWeatherMap</a></span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Client-Side Script for Unit Toggling & Recent Cities -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Unit Toggle ---
+            let currentUnit = localStorage.getItem('weather_unit') || 'C';
+            const toggleBtn = document.getElementById('unit-toggle-btn');
+            const unitC = document.getElementById('unit-c');
+            const unitF = document.getElementById('unit-f');
+
+            function cToF(c) {
+                const val = parseFloat(c);
+                return isNaN(val) ? c : Math.round(val * 9 / 5 + 32);
+            }
+
+            function applyUnit(unit) {
+                currentUnit = unit;
+                localStorage.setItem('weather_unit', unit);
+                if (unit === 'F') {
+                    unitC && unitC.classList.remove('active');
+                    unitF && unitF.classList.add('active');
+                } else {
+                    unitF && unitF.classList.remove('active');
+                    unitC && unitC.classList.add('active');
+                }
+
+                // Main hero temp
+                const mainTemp = document.getElementById('main-temp-val');
+                if (mainTemp) {
+                    const c = mainTemp.getAttribute('data-celsius');
+                    mainTemp.textContent = unit === 'F' ? cToF(c) : Math.round(parseFloat(c));
+                }
+
+                // All convertible temps
+                document.querySelectorAll('.temp-convertible').forEach(el => {
+                    const c = el.getAttribute('data-celsius');
+                    el.textContent = unit === 'F' ? cToF(c) : Math.round(parseFloat(c));
+                });
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    applyUnit(currentUnit === 'C' ? 'F' : 'C');
+                });
+            }
+            applyUnit(currentUnit);
+
+            // --- City Date/Time ---
+            const dtEl = document.getElementById('city-datetime');
+            if (dtEl) {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                dtEl.textContent = now.toLocaleDateString('en-US', options);
+            }
+
+            // --- Recent Searches ---
+            const RECENT_KEY = 'weather_recent_cities';
+            function getRecent() {
+                try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; }
+                catch { return []; }
+            }
+            function saveRecent(name) {
+                if (!name) return;
+                let arr = getRecent().filter(c => c.toLowerCase() !== name.toLowerCase());
+                arr.unshift(name);
+                localStorage.setItem(RECENT_KEY, JSON.stringify(arr.slice(0, 4)));
+            }
+            function renderRecent() {
+                const container = document.getElementById('recent-searches-container');
+                const pills = document.getElementById('recent-pills');
+                if (!container || !pills) return;
+                const cities = getRecent();
+                if (!cities.length) { container.style.display = 'none'; return; }
+                container.style.display = 'flex';
+                pills.innerHTML = '';
+                cities.forEach(city => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'recent-pill';
+                    btn.textContent = city;
+                    btn.addEventListener('click', () => {
+                        const input = document.getElementById('city-input');
+                        const form = document.getElementById('search-form');
+                        if (input && form) {
+                            input.value = city;
+                            form.submit();
+                        }
+                    });
+                    pills.appendChild(btn);
+                });
+            }
+            {% if weather %}
+                saveRecent("{{ weather.name }}");
+            {% endif %}
+            renderRecent();
+        });
+    </script>
+</body>
+
+</html>

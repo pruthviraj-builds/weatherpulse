@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — WeatherPulse</title>
+    <meta name="description" content="Privacy Policy for WeatherPulse detailing data collection practices, LocalStorage usage, and third-party API processing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=14">
+</head>
+
+<body>
+    <!-- Top Navigation Header (Outside Card) -->
+    <header class="site-header">
+        <div class="header-brand">
+            <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            </svg>
+            <span class="brand-name">WeatherPulse</span>
+        </div>
+        <nav class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/about" class="nav-link">About</a>
+        </nav>
+    </header>
+
+    <main class="app-wrapper">
+        <div class="card">
+            <div class="privacy-container">
+                <!-- Title Header -->
+                <div class="privacy-header">
+                    <span class="privacy-badge">Legal & Security</span>
+                    <h1 class="privacy-title">Privacy Policy</h1>
+                    <p class="privacy-date">Last Updated: August 13, 2026</p>
+                </div>
+
+                <!-- Section 1: Data Collection -->
+                <div class="privacy-section">
+                    <h2 class="privacy-section-title">
+                        <span class="privacy-section-num">1</span>
+                        <span>Data Collection & Privacy</span>
+                    </h2>
+                    <p class="privacy-text">
+                        WeatherPulse is built strictly as an educational full-stack software portfolio application. The application does not require user accounts, email registration, passwords, or personal identity tracking. We do not collect, harvest, store, or sell any personal data or personal identifying information (PII).
+                    </p>
+                </div>
+
+                <!-- Section 2: Local Storage -->
+                <div class="privacy-section">
+                    <h2 class="privacy-section-title">
+                        <span class="privacy-section-num">2</span>
+                        <span>Local Browser Storage</span>
+                    </h2>
+                    <p class="privacy-text">
+                        To enhance user experience, WeatherPulse utilizes your browser's client-side <code>localStorage</code> API. This storage is used exclusively to retain a history of your 3 most recently searched city names so you can quickly re-search them.
+                    </p>
+                    <p class="privacy-text">
+                        This data remains strictly stored on your personal device within your web browser. It is never transmitted to any external analytics servers, databases, or third-party tracking networks, and you can clear it at any time by clearing your browser cache.
+                    </p>
+                </div>
+
+                <!-- Section 3: Third-Party APIs -->
+                <div class="privacy-section">
+                    <h2 class="privacy-section-title">
+                        <span class="privacy-section-num">3</span>
+                        <span>Third-Party API Services</span>
+                    </h2>
+                    <p class="privacy-text">
+                        When you submit a city search, the city name string is sent via secure HTTP requests from our backend server to the <a href="https://openweathermap.org/" target="_blank" rel="noopener" class="privacy-link">OpenWeatherMap API</a> to retrieve current weather, 5-day forecast, and air pollution datasets.
+                    </p>
+                    <p class="privacy-text">
+                        WeatherPulse does not attach any personal identifiers to these API queries. For further details on how OpenWeatherMap processes API traffic, please refer to the official <a href="https://openweathermap.org/privacy-policy" target="_blank" rel="noopener" class="privacy-link">OpenWeatherMap Privacy Policy</a>.
+                    </p>
+                </div>
+
+                <!-- Section 4: Contact Information -->
+                <div class="privacy-section">
+                    <h2 class="privacy-section-title">
+                        <span class="privacy-section-num">4</span>
+                        <span>Contact Information</span>
+                    </h2>
+                    <p class="privacy-text">
+                        If you have any questions, suggestions, or technical feedback regarding this portfolio application or its privacy practices, please feel free to connect via <a href="https://github.com" target="_blank" rel="noopener" class="privacy-link">GitHub</a> or <a href="https://linkedin.com" target="_blank" rel="noopener" class="privacy-link">LinkedIn</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <span class="copyright">Developed by [Your Name] | Copyright © 2026 WeatherPulse</span>
+            <div class="footer-links">
+                <a href="/privacy">Privacy Policy</a>
+                <span class="dot">·</span>
+                <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+                <span class="dot">·</span>
+                <span>Powered by <a href="https://openweathermap.org/" target="_blank" rel="noopener">OpenWeatherMap</a></span>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
